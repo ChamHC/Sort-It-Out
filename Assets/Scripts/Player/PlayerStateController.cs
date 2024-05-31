@@ -12,6 +12,7 @@ public class PlayerStateController : MonoBehaviour
     [Header("Keybinds")]
     [SerializeField] public KeyCode JumpKey = KeyCode.Space; // Key to jump
     [SerializeField] public KeyCode SprintKey = KeyCode.LeftShift; // Key to sprint
+    [SerializeField] public KeyCode CrouchKey = KeyCode.LeftControl; // Key to crouch
 
     [Header("Camera Settings")]
     [SerializeField] public float sensitivity = 2f; // Camera sensitivity
@@ -27,6 +28,7 @@ public class PlayerStateController : MonoBehaviour
     [Header("Controls Settings")]
     [SerializeField] public float MoveSpeed = 10f; // Player movement speed
     [SerializeField] public float SprintSpeed = 20f; // Player sprint speed
+    [SerializeField] public float CrouchSpeed = 5f; // Player crouch speed
     [SerializeField] public float AirMultiplier = 0.1f; // Air movement multiplier
     [SerializeField] public float Drag = 10f; // Drag applied to the player's rigidbody
     [SerializeField] public float JumpForce = 6f; // Jump force
@@ -97,8 +99,8 @@ public class PlayerStateController : MonoBehaviour
         if (!IsGrounded) return; // Return if the player is not grounded
 
         // Determine the head bobbing speed and amount based on the current player state
-        float BobSpeed = currentState is PlayerMoveState ? HeadBobSpeed : HeadBobSpeed * 1.5f;
-        float BobAmount = currentState is PlayerMoveState ? HeadBobAmount : HeadBobAmount * 1.5f;
+        float BobSpeed = currentState is PlayerMoveState ? HeadBobSpeed : currentState is PlayerSprintState ? HeadBobSpeed * 1.5f : currentState is PlayerCrouchState ? HeadBobSpeed * 0.5f : 0f;
+        float BobAmount = currentState is PlayerMoveState ? HeadBobAmount : currentState is PlayerSprintState ? HeadBobAmount * 1.5f : currentState is PlayerCrouchState ? HeadBobAmount * 0.5f : 0f;
 
         // Check if there is any horizontal or vertical input
         if(Horizontal != 0 || Vertical != 0)
@@ -166,6 +168,11 @@ public class PlayerIdleState : PlayerState
         {
             player.ChangeState(new PlayerJumpState()); // Change to the PlayerJumpState
         }
+        // Check if crouch key is pressed
+        if (Input.GetKey(player.CrouchKey))
+        {
+            player.ChangeState(new PlayerCrouchState()); // Change to the PlayerCrouchState
+        }
     }
 
     public override void ExitState()
@@ -210,6 +217,11 @@ public class PlayerMoveState : PlayerState
         if (Input.GetKey(player.JumpKey) && player.IsGrounded)
         {
             player.ChangeState(new PlayerJumpState()); // Change to the PlayerJumpState
+        }
+        // Check if crouch key is pressed
+        if (Input.GetKey(player.CrouchKey))
+        {
+            player.ChangeState(new PlayerCrouchState()); // Change to the PlayerCrouchState
         }
     }
 
@@ -288,6 +300,51 @@ public class PlayerSprintState : PlayerState
             player.ChangeState(new PlayerMoveState()); // Change to the PlayerMoveState
         }
         // Check if jump key is pressed
+        if (Input.GetKey(player.JumpKey) && player.IsGrounded)
+        {
+            player.ChangeState(new PlayerJumpState()); // Change to the PlayerJumpState
+        }
+        // Check if crouch key is pressed
+        if (Input.GetKey(player.CrouchKey))
+        {
+            player.ChangeState(new PlayerCrouchState()); // Change to the PlayerCrouchState
+        }
+    }
+
+    public override void ExitState()
+    {
+
+    }
+}
+
+public class PlayerCrouchState : PlayerState
+{
+    public override void Start()
+    {
+        if (player.CheckStates) Debug.Log("Player is Crouching");
+    }
+
+    public override void Update()
+    {
+        Check();
+    }
+
+    public override void FixedUpdate()
+    {
+        Vector3 moveDirection = player.Camera.rotation * new Vector3(player.Horizontal, 0, player.Vertical); // Calculate the movement direction
+        moveDirection.y = 0;    // Prevent the player from moving up or down
+
+        player.Rigidbody.AddForce(moveDirection.normalized * player.CrouchSpeed * (player.IsGrounded ? 1f : player.AirMultiplier) * 10f); // Move the player
+    }
+
+    public override void Check()
+    {
+        // Check if crouch key is released
+        if (!Input.GetKey(player.CrouchKey))
+        {
+            player.ChangeState(new PlayerIdleState()); // Change to the PlayerIdleState
+        }
+        // Check if jump key is pressed and the player is grounded
         if (Input.GetKey(player.JumpKey) && player.IsGrounded)
         {
             player.ChangeState(new PlayerJumpState()); // Change to the PlayerJumpState

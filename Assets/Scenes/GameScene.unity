@@ -566,9 +566,15 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   CheckStates: 0
   JumpKey: 32
+  SprintKey: 304
+  CrouchKey: 306
   sensitivity: 2
   constraintAngle: 80
-  MoveSpeed: 20
+  HeadBobAmount: 0.1
+  HeadBobSpeed: 10
+  MoveSpeed: 10
+  SprintSpeed: 20
+  CrouchSpeed: 5
   AirMultiplier: 0.1
   Drag: 10
   JumpForce: 6
