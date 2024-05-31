@@ -11,23 +11,29 @@ public class PlayerStateController : MonoBehaviour
 
     [Header("Keybinds")]
     [SerializeField] public KeyCode JumpKey = KeyCode.Space; // Key to jump
+    [SerializeField] public KeyCode SprintKey = KeyCode.LeftShift; // Key to sprint
 
     [Header("Camera Settings")]
     [SerializeField] public float sensitivity = 2f; // Camera sensitivity
     [SerializeField] public float constraintAngle = 80f; // Maximum angle for camera rotation
+    [SerializeField] public float HeadBobAmount = 0.1f; // Head bobbing amount
+    [SerializeField] public float HeadBobSpeed = 10f; // Head bobbing speed
     [NonSerialized] public float MouseX = 0f; // Mouse X-axis input
     [NonSerialized] public float MouseY = 0f; // Mouse Y-axis input
     [NonSerialized] public Transform Camera; // Reference to the camera transform
     private float rotationX = 0f; // Current rotation angle around the X-axis
+    private Vector3 cameraDefaultPosition;  // Default camera position
 
     [Header("Controls Settings")]
-    [SerializeField] public float MoveSpeed = 20f; // Player movement speed
+    [SerializeField] public float MoveSpeed = 10f; // Player movement speed
+    [SerializeField] public float SprintSpeed = 20f; // Player sprint speed
     [SerializeField] public float AirMultiplier = 0.1f; // Air movement multiplier
     [SerializeField] public float Drag = 10f; // Drag applied to the player's rigidbody
     [SerializeField] public float JumpForce = 6f; // Jump force
     [NonSerialized] public bool IsGrounded = false; // Check if the player is grounded
     [NonSerialized] public float Horizontal = 0f; // Horizontal input axis
     [NonSerialized] public float Vertical = 0f; // Vertical input axis
+    private float timer;  // Timer for head bobbing
 
     [Header("Player State Machine")]
     private PlayerState currentState; // Current player state
@@ -46,6 +52,8 @@ public class PlayerStateController : MonoBehaviour
 
         currentState = new PlayerIdleState(); // Set the initial state to PlayerIdleState
         currentState.EnterState(this); // Enter the initial state
+
+        cameraDefaultPosition = Camera.localPosition; // Get the default camera position
     }
 
     void Update()
@@ -53,6 +61,7 @@ public class PlayerStateController : MonoBehaviour
         CameraHandler(); // Handle camera rotation
         InputHandler(); // Handle player input
         MiscHandler(); // Handle miscellaneous tasks
+        HeadBobHandler(); // Handle head bobbing
 
         currentState.Update(); // Update the current state
     }
@@ -82,6 +91,28 @@ public class PlayerStateController : MonoBehaviour
 
         if (IsGrounded) Rigidbody.drag = Drag; // Set the drag on the player's rigidbody
         else Rigidbody.drag = 0; // Reset the drag on the player's rigidbody
+    }
+
+    void HeadBobHandler(){
+        if (!IsGrounded) return; // Return if the player is not grounded
+
+        // Determine the head bobbing speed and amount based on the current player state
+        float BobSpeed = currentState is PlayerMoveState ? HeadBobSpeed : HeadBobSpeed * 1.5f;
+        float BobAmount = currentState is PlayerMoveState ? HeadBobAmount : HeadBobAmount * 1.5f;
+
+        // Check if there is any horizontal or vertical input
+        if(Horizontal != 0 || Vertical != 0)
+        {
+            timer += Time.deltaTime * BobSpeed; // Increment the timer based on the bobbing speed
+            // Apply head bobbing effect by modifying the camera's local position
+            Camera.localPosition = new Vector3(Camera.localPosition.x, cameraDefaultPosition.y + Mathf.Sin(timer) * BobAmount, Camera.localPosition.z);
+        }
+        else
+        {
+            timer = 0; // Reset the timer
+            // Smoothly return the camera to its default position using Lerp
+            Camera.localPosition = new Vector3(Camera.localPosition.x, Mathf.Lerp(Camera.localPosition.y, cameraDefaultPosition.y, Time.deltaTime * BobSpeed), Camera.localPosition.z);
+        }
     }
 
     public void ChangeState(PlayerState newState){
@@ -170,6 +201,11 @@ public class PlayerMoveState : PlayerState
         {
             player.ChangeState(new PlayerIdleState()); // Change to the PlayerIdleState
         }
+        // Check if sprint key is pressed
+        if (Input.GetKey(player.SprintKey))
+        {
+            player.ChangeState(new PlayerSprintState()); // Change to the PlayerSprintState
+        }
         // Check if jump key is pressed
         if (Input.GetKey(player.JumpKey) && player.IsGrounded)
         {
@@ -211,6 +247,51 @@ public class PlayerJumpState : PlayerState
         // Check if the player has jumped
         if (hasJump)
             player.ChangeState(new PlayerIdleState()); // Change to the PlayerIdleState
+    }
+
+    public override void ExitState()
+    {
+
+    }
+}
+
+public class PlayerSprintState : PlayerState
+{
+    public override void Start()
+    {
+        if (player.CheckStates) Debug.Log("Player is Sprinting");
+    }
+
+    public override void Update()
+    {
+        Check();
+    }
+
+    public override void FixedUpdate()
+    {
+        Vector3 moveDirection = player.Camera.rotation * new Vector3(player.Horizontal, 0, player.Vertical); // Calculate the movement direction
+        moveDirection.y = 0;    // Prevent the player from moving up or down
+
+        player.Rigidbody.AddForce(moveDirection.normalized * player.SprintSpeed * (player.IsGrounded ? 1f : player.AirMultiplier) * 10f); // Move the player
+    }
+
+    public override void Check()
+    {
+        // Check if there is no horizontal and vertical input
+        if (player.Horizontal == 0 && player.Vertical == 0)
+        {
+            player.ChangeState(new PlayerIdleState()); // Change to the PlayerIdleState
+        }
+        // check if sprint key is released
+        if (!Input.GetKey(player.SprintKey))
+        {
+            player.ChangeState(new PlayerMoveState()); // Change to the PlayerMoveState
+        }
+        // Check if jump key is pressed
+        if (Input.GetKey(player.JumpKey) && player.IsGrounded)
+        {
+            player.ChangeState(new PlayerJumpState()); // Change to the PlayerJumpState
+        }
     }
 
     public override void ExitState()
