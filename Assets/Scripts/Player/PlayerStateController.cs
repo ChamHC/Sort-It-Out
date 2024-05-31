@@ -9,6 +9,9 @@ public class PlayerStateController : MonoBehaviour
     [Header("Debug Settings")]
     [SerializeField] public bool CheckStates = false; // Enable debug mode
 
+    [Header("Keybinds")]
+    [SerializeField] public KeyCode JumpKey = KeyCode.Space; // Key to jump
+
     [Header("Camera Settings")]
     [SerializeField] public float sensitivity = 2f; // Camera sensitivity
     [SerializeField] public float constraintAngle = 80f; // Maximum angle for camera rotation
@@ -18,8 +21,11 @@ public class PlayerStateController : MonoBehaviour
     private float rotationX = 0f; // Current rotation angle around the X-axis
 
     [Header("Controls Settings")]
-    [SerializeField] public float MoveSpeed = 5f; // Player movement speed
+    [SerializeField] public float MoveSpeed = 20f; // Player movement speed
+    [SerializeField] public float AirMultiplier = 0.1f; // Air movement multiplier
     [SerializeField] public float Drag = 10f; // Drag applied to the player's rigidbody
+    [SerializeField] public float JumpForce = 6f; // Jump force
+    [NonSerialized] public bool IsGrounded = false; // Check if the player is grounded
     [NonSerialized] public float Horizontal = 0f; // Horizontal input axis
     [NonSerialized] public float Vertical = 0f; // Vertical input axis
 
@@ -35,18 +41,18 @@ public class PlayerStateController : MonoBehaviour
     {
         Camera = GetComponentInChildren<Camera>().transform; // Get the camera transform
         Rigidbody = GetComponent<Rigidbody>(); // Get the player's rigidbody
+
         Cursor.lockState = CursorLockMode.Locked; // Lock the cursor to the center of the screen
 
         currentState = new PlayerIdleState(); // Set the initial state to PlayerIdleState
         currentState.EnterState(this); // Enter the initial state
-
-        Rigidbody.drag = Drag; // Set the drag on the player's rigidbody
     }
 
     void Update()
     {
         CameraHandler(); // Handle camera rotation
         InputHandler(); // Handle player input
+        MiscHandler(); // Handle miscellaneous tasks
 
         currentState.Update(); // Update the current state
     }
@@ -69,6 +75,13 @@ public class PlayerStateController : MonoBehaviour
     void InputHandler(){
         Horizontal = Input.GetAxisRaw("Horizontal"); // Get the horizontal input axis
         Vertical = Input.GetAxisRaw("Vertical"); // Get the vertical input axis
+    }
+
+    void MiscHandler(){
+        IsGrounded = GetComponentInChildren<CheckGround>().IsGrounded; // Check if the player is grounded
+
+        if (IsGrounded) Rigidbody.drag = Drag; // Set the drag on the player's rigidbody
+        else Rigidbody.drag = 0; // Reset the drag on the player's rigidbody
     }
 
     public void ChangeState(PlayerState newState){
@@ -117,6 +130,11 @@ public class PlayerIdleState : PlayerState
         {
             player.ChangeState(new PlayerMoveState()); // Change to the PlayerMoveState
         }
+        // Check if jump key is pressed
+        if (Input.GetKey(player.JumpKey) && player.IsGrounded)
+        {
+            player.ChangeState(new PlayerJumpState()); // Change to the PlayerJumpState
+        }
     }
 
     public override void ExitState()
@@ -142,7 +160,7 @@ public class PlayerMoveState : PlayerState
         Vector3 moveDirection = player.Camera.rotation * new Vector3(player.Horizontal, 0, player.Vertical); // Calculate the movement direction
         moveDirection.y = 0;    // Prevent the player from moving up or down
 
-        player.Rigidbody.AddForce(moveDirection.normalized * player.MoveSpeed * 10f); // Move the player
+        player.Rigidbody.AddForce(moveDirection.normalized * player.MoveSpeed * (player.IsGrounded ? 1f : player.AirMultiplier) * 10f); // Move the player
     }
 
     public override void Check()
@@ -152,10 +170,51 @@ public class PlayerMoveState : PlayerState
         {
             player.ChangeState(new PlayerIdleState()); // Change to the PlayerIdleState
         }
+        // Check if jump key is pressed
+        if (Input.GetKey(player.JumpKey) && player.IsGrounded)
+        {
+            player.ChangeState(new PlayerJumpState()); // Change to the PlayerJumpState
+        }
     }
 
     public override void ExitState()
     {
-        // Perform state-specific cleanup
+
+    }
+}
+
+public class PlayerJumpState : PlayerState
+{
+    private bool hasJump = false;   // Check if the player has jumped
+
+    public override void Start()
+    {
+        if (player.CheckStates) Debug.Log("Player is Jumping");
+    }
+
+    public override void Update()
+    {
+        Check();
+    }
+
+    public override void FixedUpdate()
+    {
+        // Check if the player is grounded and has not jumped
+        if (!hasJump && player.IsGrounded) {
+            player.Rigidbody.AddForce(Vector3.up * player.JumpForce, ForceMode.Impulse); // Apply an impulse force to the player
+            hasJump = true; // Set hasJump to true
+        }
+    }
+
+    public override void Check()
+    {
+        // Check if the player has jumped
+        if (hasJump)
+            player.ChangeState(new PlayerIdleState()); // Change to the PlayerIdleState
+    }
+
+    public override void ExitState()
+    {
+
     }
 }
