@@ -3,11 +3,23 @@ using UnityEngine;
 
 public class CheckGround : MonoBehaviour
 {
-    [NonSerialized] public bool IsGrounded = false;
+    private enum Foot{
+        Left,
+        Right
+    }
+    [SerializeField] private Foot foot;
+    private PlayerStateController player;
+
+    private void Start() {
+        player = GameObject.FindGameObjectWithTag("Player").GetComponent<PlayerStateController>();
+    }
+
     private void OnTriggerStay(Collider other) {
-        IsGrounded = true;
+        if (foot == Foot.Left) player.isLeftFootGrounded = true;
+        else player.isRightFootGrounded = true;
     }
     private void OnTriggerExit(Collider other) {
-        IsGrounded = false;
+        if (foot == Foot.Left) player.isLeftFootGrounded = false;
+        else player.isRightFootGrounded = false;
     }
 }
