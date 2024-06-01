@@ -19,16 +19,17 @@ public class PlayerStateController : MonoBehaviour
 
     [Header("Camera Settings")]
     [SerializeField] public float sensitivity = 2f; // Camera sensitivity
-    [SerializeField] public float constraintAngle = 80f; // Maximum angle for camera rotation
+    [SerializeField] public float constraintAngle = 60f; // Maximum angle for camera rotation
     [NonSerialized] public float MouseX = 0f; // Mouse X-axis input
     [NonSerialized] public float MouseY = 0f; // Mouse Y-axis input
     [NonSerialized] public Transform Camera; // Reference to the camera transform
-    private float rotationX = 0f; // Current rotation angle around the X-axis
+    [NonSerialized] public Transform CameraTarget; // Reference to the camera target transform
+
 
     [Header("Controls Settings")]
     [SerializeField] public float MoveSpeed = 5f; // Player movement speed
     [SerializeField] public float SprintSpeed = 10f; // Player sprint speed
-    [SerializeField] public float CrouchSpeed = 5f; // Player crouch speed
+    [SerializeField] public float CrouchSpeed = 2.5f; // Player crouch speed
     [SerializeField] public float AirMultiplier = 0.1f; // Air movement multiplier
     [SerializeField] public float Drag = 10f; // Drag applied to the player's rigidbody
     [SerializeField] public float JumpForce = 6f; // Jump force
@@ -59,7 +60,8 @@ public class PlayerStateController : MonoBehaviour
 
     void Start()
     {
-        Camera = GetComponentInChildren<Camera>().transform; // Get the camera transform
+        Camera = GameObject.Find("Main Camera").transform; // Get the camera transform
+        CameraTarget = GameObject.Find("Camera Target").transform; // Get the camera target transform
         Rigidbody = GetComponent<Rigidbody>(); // Get the player's rigidbody
         Animator = GetComponentInChildren<Animator>(); // Get the player's animator
         Collider = GetComponentInChildren<CapsuleCollider>(); // Get the player's collider
@@ -99,11 +101,13 @@ public class PlayerStateController : MonoBehaviour
         MouseX = Input.GetAxis("Mouse X") * sensitivity; // Get the mouse X-axis input
         MouseY = Input.GetAxis("Mouse Y") * sensitivity; // Get the mouse Y-axis input
 
-        rotationX -= MouseY; // Update the rotation around the X-axis
-        rotationX = Mathf.Clamp(rotationX, -constraintAngle, constraintAngle); // Clamp the rotation angle
-
-        PlayerNeck.transform.localRotation = Quaternion.Euler(rotationX, 0f, 0f); // Apply the neck rotation
-        transform.Rotate(Vector3.up * MouseX); // Rotate the player object around the Y-axis
+        // Rotate the player's body based on the mouse X-axis input
+        if (currentState is PlayerMoveState || currentState is PlayerSprintState || currentState is PlayerCrouchState){ 
+            if (Horizontal != 0 || Vertical != 0) // Check if there is any horizontal or vertical input
+            {
+                transform.rotation = Quaternion.Slerp(transform.rotation, Quaternion.Euler(0, Camera.eulerAngles.y, 0), Time.deltaTime * 10f); // Smoothly interpolate the player's rotation
+            }
+        }
     }
 
     void InputHandler(){
@@ -224,7 +228,7 @@ public class PlayerMoveState : PlayerState
 
     public override void FixedUpdate()
     {
-        Vector3 moveDirection = player.Camera.rotation * new Vector3(player.Horizontal, 0, player.Vertical); // Calculate the movement direction
+        Vector3 moveDirection = player.CameraTarget.rotation * new Vector3(player.Horizontal, 0, player.Vertical); // Calculate the movement direction
         moveDirection.y = 0;    // Prevent the player from moving up or down
 
         player.Rigidbody.AddForce(moveDirection.normalized * player.MoveSpeed * (player.IsGrounded ? 1f : player.AirMultiplier) * 10f); // Move the player
