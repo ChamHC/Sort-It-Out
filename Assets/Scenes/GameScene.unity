@@ -1756,6 +1756,33 @@ MeshFilter:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 885283059}
   m_Mesh: {fileID: 10209, guid: 0000000000000000e000000000000000, type: 0}
+--- !u!1 &981031927 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 9170116741360521897, guid: 4f1052fa5ed6b1744adce317e7962073,
+    type: 3}
+  m_PrefabInstance: {fileID: 616257243756334881}
+  m_PrefabAsset: {fileID: 0}
+--- !u!135 &981031930
+SphereCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 981031927}
+  m_Material: {fileID: 13400000, guid: 38585c56c2c942f448fb00fc19861915, type: 2}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 0
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Radius: 0.45
+  m_Center: {x: 0, y: 0.15, z: 0}
 --- !u!1 &1043192876
 GameObject:
   m_ObjectHideFlags: 0
@@ -3273,7 +3300,11 @@ PrefabInstance:
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
-    m_AddedComponents: []
+    m_AddedComponents:
+    - targetCorrespondingSourceObject: {fileID: 9170116741360521897, guid: 4f1052fa5ed6b1744adce317e7962073,
+        type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 981031930}
   m_SourcePrefab: {fileID: 100100000, guid: 4f1052fa5ed6b1744adce317e7962073, type: 3}
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
