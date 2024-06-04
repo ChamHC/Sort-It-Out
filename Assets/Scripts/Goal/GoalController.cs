@@ -21,6 +21,7 @@ public class GoalController : MonoBehaviour
     void OnTriggerStay(Collider other) {
         if (other.tag == blockTag) {
             IsFulfilled = true;
+            Debug.Log("IN");
         }
     }
 
