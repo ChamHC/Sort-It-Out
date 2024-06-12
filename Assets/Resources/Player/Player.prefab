@@ -9,6 +9,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 5907889029075861150}
+  - component: {fileID: 3445274812219408268}
   m_Layer: 0
   m_Name: Pickup
   m_TagString: Untagged
@@ -31,6 +32,27 @@ Transform:
   m_Children: []
   m_Father: {fileID: 2919663636760889901}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!135 &3445274812219408268
+SphereCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 27728625750747518}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 1
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Radius: 0.91840136
+  m_Center: {x: 0, y: 0.021427691, z: -0.04235804}
 --- !u!1 &897684958968007092
 GameObject:
   m_ObjectHideFlags: 0
@@ -132,8 +154,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: eda0a62d85ccbbe479ce316d8c69aece, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  pickupRange: 2
   holdPosition: {fileID: 5907889029075861150}
+  throwForce: 25
 --- !u!1 &2502527383736868524
 GameObject:
   m_ObjectHideFlags: 0

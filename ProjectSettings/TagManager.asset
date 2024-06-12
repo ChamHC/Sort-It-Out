@@ -4,8 +4,14 @@
 TagManager:
   serializedVersion: 2
   tags:
-  - Cube
   - Interactable
+  - Red
+  - Green
+  - Blue
+  - Orange
+  - Violet
+  - Indigo
+  - Yellow
   layers:
   - Default
   - TransparentFX

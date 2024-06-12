@@ -5,7 +5,6 @@ using UnityEngine;
 
 public class GoalController : MonoBehaviour
 {
-    [SerializeField] public GameObject Block;
     [NonSerialized] public bool IsFulfilled = false;
     [NonSerialized] private string blockTag;
     [SerializeField] public AudioClip goalSound;
@@ -14,7 +13,7 @@ public class GoalController : MonoBehaviour
 
     void Start()
     {
-        blockTag = Block.tag;
+        blockTag = this.tag;
         audioSource.clip = goalSound;
     }
 
