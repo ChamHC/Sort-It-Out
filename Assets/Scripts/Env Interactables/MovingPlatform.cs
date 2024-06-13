@@ -18,10 +18,10 @@ public class MovingPlatform : MonoBehaviour
     void Update()
     {
         // Move the platform towards the target waypoint
-        transform.position = Vector3.MoveTowards(transform.position, targetWaypoint.position, speed * Time.deltaTime);
+        transform.parent.position = Vector3.MoveTowards(transform.parent.position, targetWaypoint.position, speed * Time.deltaTime);
 
         // Check if the platform has reached the target waypoint
-        if (Vector3.Distance(transform.position, targetWaypoint.position) < 0.1f)
+        if (Vector3.Distance(transform.parent.position, targetWaypoint.position) < 0.1f)
         {
             // Toggle the target waypoint
             movingToWaypoint1 = !movingToWaypoint1;

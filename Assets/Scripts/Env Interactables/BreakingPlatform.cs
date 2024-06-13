@@ -26,13 +26,20 @@ public class BreakingPlatform : MonoBehaviour
         isBreaking = true;
 
         yield return new WaitForSeconds(3f);
-        platformRenderer.enabled = false;
-        platformCollider.enabled = false;
+        MeshRenderer[] childRenderers = transform.parent.gameObject.GetComponentsInChildren<MeshRenderer>();
+        foreach (MeshRenderer childRenderer in childRenderers)
+        {
+            childRenderer.enabled = false;
+        }
+        transform.parent.gameObject.GetComponentInChildren<MeshCollider>().enabled = false;
 
         
         yield return new WaitForSeconds(3f);
-        platformRenderer.enabled = true;
-        platformCollider.enabled = true;
+        foreach (MeshRenderer childRenderer in childRenderers)
+        {
+            childRenderer.enabled = true;
+        }
+        transform.parent.gameObject.GetComponentInChildren<MeshCollider>().enabled = true;
 
         isBreaking = false;
     }
